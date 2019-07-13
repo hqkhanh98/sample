@@ -9,8 +9,9 @@
 --============================================================================--
 
 -- Include the libary/module
-local composer  = require ("composer")
-local sheetInfo = require ("Assets.Sheets.hero")
+local composer  = require "composer"
+local sheetInfo = require "Assets.Sheets.hero"
+
 -- Define module
 local M = {}
 
@@ -24,13 +25,15 @@ function M.new( instance, options )
 	local sounds = scene.sounds -- Will use when have sounds
 
 	-- Location instance
-  	local x = options.x or display.contentCenterX - 220
-  	local y = options.y or display.contentCenterY + 100
+	instance.isVisible = false
+  	local x, y = instance.x, instance.y
+
+
 
 	local velocityX, velocityY
 	local velocityMax, speed, left, right, distance = 230, 150, 0, 0, 0
 	local lastEvent = {}
-	local isTurn = false
+	local isTurn, isRun, isShoot = false, false, false
 	local parentGroup = instance.parent -- Group of instance
 
 
@@ -55,7 +58,7 @@ function M.new( instance, options )
 		{
 			name 		  = "jumping",
 			frames 		  = { 35, 36, 37, 38, 39, 40, 31 },
-			time 		  = 1230,
+			time 		  = 1100,
 			loopCount 	  = 1,
 			loopDirection = "forward"
 		},
@@ -66,11 +69,18 @@ function M.new( instance, options )
 			time 		  = 1000,
 			loopCount 	  = 0,
 			loopDirection = "forward"
+		},
+		{
+			name = "shootidle",
+			frames = { 54, 55 },
+			loopCount = 1,
+			loopDirection = "forward"
 		}
 
 	}
 	-- Load sprite hero
 	instance = display.newSprite( parentGroup, heroSheet, sequenceData )
+
 	instance:scale( 2, 2 )
 	instance.x = x
 	instance.y = y
@@ -78,7 +88,7 @@ function M.new( instance, options )
 	physics.addBody( instance, "dynamic", { density = 1, friction= 1.5,
 											box = { halfWidth= 15, halfHeight= 32, x=0, y=0 } , -- The box2D
 											bounce = 0 } )
-
+	instance.isSensor = false
 	-- None change rotation
 	instance.isFixedRotation = true
 
@@ -88,6 +98,7 @@ function M.new( instance, options )
 		local key = event.keyName
 		-- Repeating keys
 		if phase == lastEvent.phase and key == lastEvent.keyName then
+
 			print( "Repeating keys" )
 			return false
 		end
@@ -99,7 +110,7 @@ function M.new( instance, options )
 			if key == "left" then
 
 				left = - speed -- Speed
-
+				isRun = true
 				-- Check jump, if not jump then play run animation
 				if not instance.jumping then
 					instance:setSequence( "running" )
@@ -117,7 +128,7 @@ function M.new( instance, options )
 			elseif key == "right" then
 
 				right = speed -- 'Speed'
-
+				isRun = true
 				-- Check jump, if not jump then play run animation
 				if not instance.jumping then
 					instance:setSequence( "running" )
@@ -133,6 +144,14 @@ function M.new( instance, options )
 			-- Jump key
 			elseif key == "space" then
 				instance:jump()
+			elseif key == "q" then
+
+				if isRun then
+					instance:setSequence( "shootrun" )
+				else 
+					instance:setSequence( "shootidle" )
+				end
+				
 			end -- End of Key down
 
 				-- Play animation
@@ -145,17 +164,23 @@ function M.new( instance, options )
 				if not instance.jumping then
 					instance:setSequence( "idle" )
 				end
-				left = 0 -- Stop
 
-		  elseif key == "right" then
+				left = 0 -- Stop
+				isRun = false
+		  	elseif key == "right" then
 				-- Check jump
 				if not instance.jumping then
 					instance:setSequence( "idle" )
 				end
 
 				right = 0 -- Stop
+				isRun = false
+			elseif key == "q" then
+				createBullet()
 			end -- End of Key up
-
+			if left == 0 and right == 0 and not instance.jumping then
+				instance:setSequence("idle")
+			end
 			-- Play animation
 			instance:play()
 
@@ -169,7 +194,7 @@ function M.new( instance, options )
   	-- Jump
 	function instance:jump()
 		if not self.jumping then
-			self:applyLinearImpulse( 0, - 30 )
+			self:applyLinearImpulse( 0, - 32 )
 			instance:setSequence( "jumping" )
 			instance:play()
 			self.jumping = true
@@ -191,6 +216,7 @@ function M.new( instance, options )
 
 	-- Friction between hero and other
 	function instance:preCollision( event )
+
 		local other = event.other
 		local y1, y2 = self.y + 50, other.y - other.height/2
 		if event.contact and ( y1 > y2 ) then
@@ -198,7 +224,27 @@ function M.new( instance, options )
 				event.contact.friction = 0.7
 		end
 	end -- End of function preCollision
+	function createBullet()
+		local vx, vy = instance:getLinearVelocity()
+		local newLaser = display.newImageRect( parentGroup, "Assets/Images/normalbullet.png", 16, 12 )--instance.x + 30, instance.y - 5, 5, 5 )
+	    physics.addBody( newLaser, "dynamic", { isSensor = false } )
 
+	    newLaser.isBullet = true
+	    
+	    newLaser.y = instance.y - 5
+	    if not isTurn then
+			newLaser.x = instance.x + 40
+		    transition.to( newLaser, { x = instance.x + 1000, y = newLaser.y, time=1000,
+	        onComplete = function() display.remove( newLaser ) end
+	    	} )
+	    end
+		if isTurn then
+			newLaser.x = instance.x - 40
+			transition.to( newLaser, { x = instance.x - 1000, time=1000,
+	        onComplete = function() display.remove( newLaser ) end
+	    	} )
+		end
+	end
 	-- Do this every frame
 	local function enterFrame()
 		-- Get current velocity
