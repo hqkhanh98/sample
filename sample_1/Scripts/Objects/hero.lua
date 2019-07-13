@@ -41,8 +41,8 @@ function M.new( instance, options )
 			name 		  = "idle",
 			frames 		  = { 31, 32, 33 },
 			time 		  = 500,
-    	    loopCount 	  = 0,
-    	    loopDirection = "forward"
+			loopCount 	  = 0,
+			loopDirection = "forward"
 		},
 		{
 			name   		  = "running",
