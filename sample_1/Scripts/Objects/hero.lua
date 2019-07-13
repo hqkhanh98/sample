@@ -9,14 +9,14 @@
 --============================================================================--
 
 -- Include the libary/module
-local composer = require ("composer")
+local composer  = require ("composer")
 local sheetInfo = require ("Assets.Sheets.hero")
 -- Define module
 local M = {}
 
 function M.new( instance, options )
 
-  -- Default options for instance
+  	-- Default options for instance
 	options = options or {}
 
 	-- Get the current scene
@@ -24,8 +24,8 @@ function M.new( instance, options )
 	local sounds = scene.sounds -- Will use when have sounds
 
 	-- Location instance
-  local x = options.x or display.contentCenterX - 220
-  local y = options.y or display.contentCenterY + 100
+  	local x = options.x or display.contentCenterX - 220
+  	local y = options.y or display.contentCenterY + 100
 
 	local velocityX, velocityY
 	local velocityMax, speed, left, right, distance = 230, 150, 0, 0, 0
@@ -35,36 +35,36 @@ function M.new( instance, options )
 
 
 	-- Display instance
-  local heroSheet = graphics.newImageSheet( "Assets/Sheets/hero.png", sheetInfo:getSheet() )
+  	local heroSheet = graphics.newImageSheet( "Assets/Sheets/hero.png", sheetInfo:getSheet() )
 	local sequenceData = {
 		{
-			name 					= "idle",
-			frames 				= { 31, 32, 33 },
-			time					= 500,
-    	loopCount 		= 0,
-    	loopDirection = "forward"
+			name 		  = "idle",
+			frames 		  = { 31, 32, 33 },
+			time 		  = 500,
+    	    loopCount 	  = 0,
+    	    loopDirection = "forward"
 		},
 		{
-			name 					= "running",
-			start 				= 41,
-			count 				= 10,
-			time 					= 1000,
-			loopCount 		= 0,
+			name   		  = "running",
+			start 		  = 41,
+			count 		  = 10,
+			time 		  = 1000,
+			loopCount 	  = 0,
 			loopDirection = "forward"
 		},
 		{
-			name 					= "jumping",
-			frames 				= { 35, 36, 37, 38, 39, 40, 31 },
-			time 					= 1230,
-			loopCount 		= 1,
+			name 		  = "jumping",
+			frames 		  = { 35, 36, 37, 38, 39, 40, 31 },
+			time 		  = 1230,
+			loopCount 	  = 1,
 			loopDirection = "forward"
 		},
 		{
-			name 					= "shootrun",
-			start 				= 63,
-			count 				= 9,
-			time 					= 1000,
-			loopCount 		= 0,
+			name 		  = "shootrun",
+			start 		  = 63,
+			count 		  = 9,
+			time 		  = 1000,
+			loopCount 	  = 0,
 			loopDirection = "forward"
 		}
 
@@ -76,13 +76,13 @@ function M.new( instance, options )
 	instance.y = y
 	-- Physics body type of instance
 	physics.addBody( instance, "dynamic", { density = 1, friction= 1.5,
-																					box = { halfWidth= 15, halfHeight= 32, x=0, y=0 } , -- The box2D
-																					bounce = 0 } )
+											box = { halfWidth= 15, halfHeight= 32, x=0, y=0 } , -- The box2D
+											bounce = 0 } )
 
 	-- None change rotation
 	instance.isFixedRotation = true
 
-  -- Keyboard controller
+  	-- Keyboard controller
 	local function onKey( event )
 		local phase = event.phase
 		local key = event.keyName
@@ -129,12 +129,15 @@ function M.new( instance, options )
 					isTurn = false
 				end
 				print( "Move right" )
+	
 			-- Jump key
 			elseif key == "space" then
 				instance:jump()
-			end
+			end -- End of Key down
+
 				-- Play animation
 				instance:play()
+	
 		elseif phase == "up" then
 			-- When release the key
 			if key == "left" then
@@ -149,24 +152,29 @@ function M.new( instance, options )
 				if not instance.jumping then
 					instance:setSequence( "idle" )
 				end
+
 				right = 0 -- Stop
-			end
+			end -- End of Key up
+
 			-- Play animation
 			instance:play()
-		end
+
+		end -- End of phase
+		
 		-- Check click event last
 		lastEvent = event
 		return false
-	end
-  -- Jump
+	end -- End of function onKey
+  	
+  	-- Jump
 	function instance:jump()
 		if not self.jumping then
 			self:applyLinearImpulse( 0, - 30 )
 			instance:setSequence( "jumping" )
 			instance:play()
 			self.jumping = true
-		end
-	end
+		end 
+	end -- End of function jump
 
 	function instance:collision( event )
 		local phase = event.phase
@@ -179,7 +187,7 @@ function M.new( instance, options )
 				self.jumping = false
 			end
 		end
-	end
+	end -- End of function collision
 
 	-- Friction between hero and other
 	function instance:preCollision( event )
@@ -189,7 +197,7 @@ function M.new( instance, options )
 				-- friction land
 				event.contact.friction = 0.7
 		end
-	end
+	end -- End of function preCollision
 
 	-- Do this every frame
 	local function enterFrame()
@@ -208,7 +216,7 @@ function M.new( instance, options )
 			instance:applyForce( distance, 0, instance.x, instance.y )
 		end
 
-	end
+	end -- End of function enterFrame
 
 	-- Add collision listeners
 	instance:addEventListener( "preCollision" )
@@ -224,6 +232,6 @@ function M.new( instance, options )
 	instance.name = "hero"
 	instance.type = "hero"
   return instance
-end
+end -- End of module
 
 return M
